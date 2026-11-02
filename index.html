@@ -162,6 +162,8 @@
 
   .overlay{position:fixed;inset:0;background:rgba(20,33,61,.6);display:flex;align-items:center;justify-content:center;padding:20px;z-index:50;overflow:auto}
   .overlay[hidden]{display:none}
+  .mhint{margin-top:10px;font-size:.85rem;color:var(--caution);line-height:1.6}
+  .mhint:empty{display:none}
   .modal{background:#fff;border-radius:6px;padding:36px;max-width:520px;width:100%;position:relative;max-height:92vh;overflow:auto}
   .modal h3{font-size:1.25rem;margin-bottom:8px;padding-right:24px}
   .modal-lead{font-size:.9rem;color:var(--ink-2);margin-bottom:24px}
@@ -515,6 +517,7 @@
     <p class="mnote">最低デポジットは55,000AED（約220万円）です。また、口座開設にはドバイへの渡航（3日程度）が必要です。どちらかが難しい場合、開設はできません。</p>
 
     <button type="button" class="btn" id="submitBtn" disabled>この内容で予約する</button>
+    <p class="mhint" id="mHint" aria-live="polite"></p>
     <button type="button" class="btn ghost close-b" id="closeModal2">閉じる</button>
 
     <div class="done" id="done" hidden>
@@ -649,10 +652,17 @@
     document.querySelectorAll('#mJobWrap .opt').forEach(x=>x.classList.remove('on'));
     b.classList.add('on'); mjob=b.dataset.mjob; validate();
   }));
+  const telDigits=()=>$('mTel').value.replace(/[０-９]/g,c=>String.fromCharCode(c.charCodeAt(0)-0xFEE0)).replace(/\D/g,'');
   function validate(){
-    const ok = $('mName').value.trim() && /.+@.+\..+/.test($('mMail').value)
-      && $('mTel').value.trim().length>=10 && mjob && slot;
-    submitBtn.disabled=!ok;
+    const miss=[];
+    if(!$('mName').value.trim()) miss.push('お名前');
+    if(!/.+@.+\..+/.test($('mMail').value.trim())) miss.push('メールアドレス');
+    const t=telDigits().length;
+    if(t<10||t>11) miss.push('電話番号（10〜11桁の数字。現在'+t+'桁）');
+    if(!mjob) miss.push('ご職業');
+    if(!slot) miss.push('ご希望の日時');
+    submitBtn.disabled = miss.length>0;
+    $('mHint').textContent = miss.length ? '未入力・確認が必要な項目：'+miss.join('／') : '';
   }
   ['mName','mMail','mTel'].forEach(id=>$(id).addEventListener('input',validate));
 
